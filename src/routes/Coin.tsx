@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "react-query";
 import { Link } from "react-router-dom";
 import { useMatch } from "react-router-dom";
 import { useLocation, useParams, Routes, Route } from "react-router-dom";
 import styled from "styled-components";
+import { fetchCoinInfo, fetchCoinTickers } from "./api";
 import Chart from "./Chart";
 import Price from "./Price";
 
@@ -132,14 +134,22 @@ interface IPriceData {
 }
 
 function Coin() {
-  const [loading, setLoading] = useState(true);
   const { coinId } = useParams();
   const location = useLocation();
   const state = location.state as RouteState;
-  const [info, setInfo] = useState<IInfoData>();
-  const [priceInfo, setPriceInfo] = useState<IPriceData>();
   const priceMatch = useMatch("/:coinId/price");
   const chartMatch = useMatch("/:coinId/chart");
+  const { isLoading: infoLoading, data: infoData } = useQuery<IInfoData>(
+    ["info", coinId],
+    () => fetchCoinInfo(coinId!)
+  );
+  const { isLoading: tickersLoading, data: tickersData } = useQuery<IPriceData>(
+    ["tickers", coinId],
+    () => fetchCoinTickers(coinId!)
+  );
+  /*   const [loading, setLoading] = useState(true);
+  const [info, setInfo] = useState<IInfoData>();
+  const [priceInfo, setPriceInfo] = useState<IPriceData>();
   useEffect(() => {
     (async () => {
       const infoData = await (
@@ -152,12 +162,13 @@ function Coin() {
       setPriceInfo(priceData);
       setLoading(false);
     })();
-  }, [coinId]);
+  }, [coinId]); */
+  const loading = infoLoading || tickersLoading;
   return (
     <Container>
       <Header>
         <Title>
-          {state?.name ? state.name : loading ? "Loading" : info?.name}
+          {state?.name ? state.name : loading ? "Loading" : infoData?.name}
         </Title>
       </Header>
       {loading ? (
@@ -167,26 +178,26 @@ function Coin() {
           <Overview>
             <OvervireItem>
               <span>Rank</span>
-              <span>{info?.rank}</span>
+              <span>{infoData?.rank}</span>
             </OvervireItem>
             <OvervireItem>
               <span>Symbol</span>
-              <span>${info?.symbol}</span>
+              <span>${infoData?.symbol}</span>
             </OvervireItem>
             <OvervireItem>
               <span>Open Source</span>
-              <span>{info?.open_source ? "Y es" : "No"}</span>
+              <span>{infoData?.open_source ? "Yes" : "No"}</span>
             </OvervireItem>
           </Overview>
-          <Description>{info?.description}</Description>
+          <Description>{infoData?.description}</Description>
           <Overview>
             <OvervireItem>
               <span>Total Suply</span>
-              <span>{priceInfo?.total_supply}</span>
+              <span>{tickersData?.total_supply}</span>
             </OvervireItem>
             <OvervireItem>
               <span>Max Supply</span>
-              <span>{priceInfo?.max_supply}</span>
+              <span>{tickersData?.max_supply}</span>
             </OvervireItem>
           </Overview>
           <Taps>
