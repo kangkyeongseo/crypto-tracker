@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
 import { useQuery } from "react-query";
-import { Link } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
 import { useMatch } from "react-router-dom";
 import { useLocation, useParams, Routes, Route } from "react-router-dom";
 import styled from "styled-components";
@@ -201,19 +200,16 @@ function Coin() {
             </OvervireItem>
           </Overview>
           <Taps>
-            <Tap isActive={priceMatch !== null}>
-              <Link to="price">Price</Link>
-            </Tap>
             <Tap isActive={chartMatch !== null}>
               <Link to="chart">Chart</Link>
             </Tap>
+            <Tap isActive={priceMatch !== null}>
+              <Link to="price">Price</Link>
+            </Tap>
           </Taps>
-          <Routes>
-            <Route path="price" element={<Price />} />
-            <Route path="chart" element={<Chart />} />
-          </Routes>
         </>
       )}
+      <Outlet context={{ coinId }} />
     </Container>
   );
 }
