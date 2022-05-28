@@ -1,11 +1,10 @@
 import { useQuery } from "react-query";
 import { Link, Outlet } from "react-router-dom";
 import { useMatch } from "react-router-dom";
-import { useLocation, useParams, Routes, Route } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { fetchCoinInfo, fetchCoinTickers } from "./api";
-import Chart from "./Chart";
-import Price from "./Price";
+import { Helmet } from "react-helmet";
 
 const Container = styled.div`
   padding: 0px 20px;
@@ -15,14 +14,23 @@ const Container = styled.div`
 
 const Header = styled.header`
   height: 10vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  margin-bottom: 10px;
+  a {
+    display: flex;
+    align-items: flex-end;
+    margin-left: 10px;
+    color: ${(props) => props.theme.accentColor};
+  }
 `;
 
 const Title = styled.h1`
   font-size: 48px;
   color: ${(props) => props.theme.accentColor};
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
 const Loader = styled.span`
@@ -144,7 +152,10 @@ function Coin() {
   );
   const { isLoading: tickersLoading, data: tickersData } = useQuery<IPriceData>(
     ["tickers", coinId],
-    () => fetchCoinTickers(coinId!)
+    () => fetchCoinTickers(coinId!),
+    {
+      refetchInterval: 5000,
+    }
   );
   /*   const [loading, setLoading] = useState(true);
   const [info, setInfo] = useState<IInfoData>();
@@ -165,7 +176,13 @@ function Coin() {
   const loading = infoLoading || tickersLoading;
   return (
     <Container>
+      <Helmet>
+        <title>
+          {state?.name ? state.name : loading ? "Loading" : infoData?.name}
+        </title>
+      </Helmet>
       <Header>
+        <Link to={"/"}>◀︎ Home</Link>
         <Title>
           {state?.name ? state.name : loading ? "Loading" : infoData?.name}
         </Title>
@@ -184,8 +201,8 @@ function Coin() {
               <span>${infoData?.symbol}</span>
             </OvervireItem>
             <OvervireItem>
-              <span>Open Source</span>
-              <span>{infoData?.open_source ? "Yes" : "No"}</span>
+              <span>Price</span>
+              <span>${tickersData?.quotes.USD.price.toFixed(2)}</span>
             </OvervireItem>
           </Overview>
           <Description>{infoData?.description}</Description>
