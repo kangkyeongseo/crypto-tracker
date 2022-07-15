@@ -1,113 +1,104 @@
 import { useQuery } from "react-query";
-import { Link } from "react-router-dom";
+import { getCoins, ICoins } from "../api";
 import styled from "styled-components";
-import { fetchCoins } from "./api";
-import { Helmet } from "react-helmet";
-import { useSetRecoilState } from "recoil";
+import CoinList from "./Components/CoinList";
+import { Link } from "react-router-dom";
+import { useRecoilState } from "recoil";
 import { isDarkAtom } from "./atoms";
 
-const Container = styled.div`
-  padding: 0px 20px;
-  max-width: 480px;
+const Header = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+  max-width: 600px;
   margin: 0 auto;
+  padding: 30px;
 `;
 
-const Header = styled.header`
-  height: 10vh;
+const HeaderContent = styled.div`
   display: flex;
   justify-content: center;
-  align-items: center;
-`;
-
-const CoinsList = styled.ul``;
-
-const Coin = styled.li`
-  background-color: ${(props) => props.theme.bgColor};
-  color: ${(props) => props.theme.textColor};
-  border: 1px solid;
-  margin-bottom: 10px;
-  border-radius: 15px;
-  a {
-    display: flex;
-    align-items: center;
-    transition: color 0.2s ease-in;
-    padding: 20px;
-  }
-  &:hover {
-    a {
-      color: ${(props) => props.theme.accentColor};
-    }
-  }
 `;
 
 const Title = styled.h1`
-  font-size: 48px;
-  color: ${(props) => props.theme.accentColor};
+  font-size: 24px;
+  font-weight: bold;
+  text-transform: uppercase;
 `;
 
-const Loader = styled.span`
+const ModeBtn = styled.div`
+  background-color: ${(props) => props.theme.bgColor};
+  padding: 10px;
+  border-radius: 50%;
+  transition: all 0.2s linear;
+  cursor: pointer;
+  :hover {
+    transform: scale(1.05);
+  }
+  svg {
+    width: 25px;
+    fill: ${(props) => props.theme.textColor};
+  }
+`;
+
+const Wrapper = styled.div`
+  max-width: 600px;
+  margin: 0 auto;
+  background-color: ${(props) => props.theme.bgColor};
+  padding: 20px 15px;
+  border-radius: 45px;
+  margin-bottom: 30px;
+`;
+
+const Loading = styled.div`
   text-align: center;
-  display: block;
+  margin-top: 400px;
+  color: ${(props) => props.theme.bgColor};
 `;
 
-const Img = styled.img`
-  width: 35px;
-  height: 35px;
-  margin-right: 10px;
-`;
-
-interface ICoin {
-  id: string;
-  name: string;
-  symbol: string;
-  rank: number;
-  is_new: boolean;
-  is_active: boolean;
-  type: string;
-}
-
-function Coins() {
-  const setDarkAtom = useSetRecoilState(isDarkAtom);
-  const toggleDarkAtom = () => setDarkAtom((prev) => !prev);
-  const { isLoading, data } = useQuery<ICoin[]>("allCoins", fetchCoins);
-  /*   const [loading, setLoading] = useState(true);
-  const [coins, setConins] = useState<CoinInterface[]>([]);
-  useEffect(() => {
-    (async () => {
-      const response = await fetch("https://api.coinpaprika.com/v1/coins");
-      const json = await response.json();
-      setConins(json.slice(0, 100));
-      setLoading(false);
-    })();
-  }, []); */
+function Home() {
+  const { data, isLoading } = useQuery<ICoins[]>("coins", getCoins);
+  const [isDark, setIsDark] = useRecoilState(isDarkAtom);
+  const onClick = () => setIsDark((prev) => !prev);
   return (
-    <Container>
-      <Helmet>
-        <title>Coin</title>
-      </Helmet>
-      <Header>
-        <Title>Coin</Title>
-        <button onClick={toggleDarkAtom}>Toggle Mode</button>
-      </Header>
+    <>
       {isLoading ? (
-        <Loader>Loading...</Loader>
+        <Loading>Loading...</Loading>
       ) : (
-        <CoinsList>
-          {data?.slice(0, 100).map((coin) => (
-            <Coin key={coin.id}>
-              <Link to={`/${coin.id}`} state={{ name: coin.name }}>
-                <Img
-                  src={`https://cryptocurrencyliveprices.com/img/${coin.id}.png`}
-                  alt={coin.id}
+        <>
+          <Header>
+            <HeaderContent></HeaderContent>
+            <HeaderContent>
+              <Title>Coin Tracker</Title>
+            </HeaderContent>
+            <HeaderContent>
+              <ModeBtn onClick={onClick}>
+                {!isDark ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                    <path d="M256 159.1c-53.02 0-95.1 42.98-95.1 95.1S202.1 351.1 256 351.1s95.1-42.98 95.1-95.1S309 159.1 256 159.1zM509.3 347L446.1 255.1l63.15-91.01c6.332-9.125 1.104-21.74-9.826-23.72l-109-19.7l-19.7-109c-1.975-10.93-14.59-16.16-23.72-9.824L256 65.89L164.1 2.736c-9.125-6.332-21.74-1.107-23.72 9.824L121.6 121.6L12.56 141.3C1.633 143.2-3.596 155.9 2.736 164.1L65.89 256l-63.15 91.01c-6.332 9.125-1.105 21.74 9.824 23.72l109 19.7l19.7 109c1.975 10.93 14.59 16.16 23.72 9.824L256 446.1l91.01 63.15c9.127 6.334 21.75 1.107 23.72-9.822l19.7-109l109-19.7C510.4 368.8 515.6 356.1 509.3 347zM256 383.1c-70.69 0-127.1-57.31-127.1-127.1c0-70.69 57.31-127.1 127.1-127.1s127.1 57.3 127.1 127.1C383.1 326.7 326.7 383.1 256 383.1z" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                    <path d="M32 256c0-123.8 100.3-224 223.8-224c11.36 0 29.7 1.668 40.9 3.746c9.616 1.777 11.75 14.63 3.279 19.44C245 86.5 211.2 144.6 211.2 207.8c0 109.7 99.71 193 208.3 172.3c9.561-1.805 16.28 9.324 10.11 16.95C387.9 448.6 324.8 480 255.8 480C132.1 480 32 379.6 32 256z" />
+                  </svg>
+                )}
+              </ModeBtn>
+            </HeaderContent>
+          </Header>
+          <Wrapper>
+            {data?.slice(0, 100).map((coin) => (
+              <Link to={`${coin.id}`} key={coin.id} state={{ name: coin.name }}>
+                <CoinList
+                  name={coin.name}
+                  image={`https://coinicons-api.vercel.app/api/icon/${coin.symbol.toLowerCase()}`}
                 />
-                {coin.name} &rarr;
               </Link>
-            </Coin>
-          ))}
-        </CoinsList>
+            ))}
+          </Wrapper>
+        </>
       )}
-    </Container>
+    </>
   );
 }
 
-export default Coins;
+export default Home;

@@ -1,47 +1,44 @@
-import ApexCharts from "react-apexcharts";
 import { useQuery } from "react-query";
 import { useOutletContext } from "react-router-dom";
+import ApexChart from "react-apexcharts";
+import styled from "styled-components";
+import { getCoinHistory, ICoinHistory } from "../api";
+import { IOutletContext } from "./Price";
 import { useRecoilValue } from "recoil";
-import { fetchCoinHistory } from "./api";
 import { isDarkAtom } from "./atoms";
 
-interface IHistorical {
-  time_open: string;
-  time_close: string;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-  volume: number;
-  market_cap: number;
-}
-
-interface ChartProps {
-  coinId: string;
-}
+const Wrapper = styled.div`
+  color: ${(props) => props.theme.textColor};
+`;
 
 function Chart() {
-  const isDark = useRecoilValue(isDarkAtom);
-  const { coinId } = useOutletContext<ChartProps>();
-  const { isLoading, data } = useQuery<IHistorical[]>(["ohlcv", coinId], () =>
-    fetchCoinHistory(coinId)
+  const { coinId } = useOutletContext<IOutletContext>();
+  const { data, isLoading } = useQuery<ICoinHistory[]>(
+    ["history", coinId],
+    () => getCoinHistory(coinId)
   );
+  const isDark = useRecoilValue(isDarkAtom);
   return (
-    <div>
-      {isLoading ? (
-        "Loading chart..."
-      ) : (
-        <ApexCharts
-          type="line"
+    <Wrapper>
+      {isLoading ? null : (
+        <ApexChart
+          type="candlestick"
           series={[
             {
-              name: coinId,
-              data: data?.map((price) => price.close) as number[],
+              data: data?.map((info) => {
+                return {
+                  x: new Date(Number(info.time_open) * 1000),
+                  y: [info.open, info.high, info.low, info.close],
+                };
+              }) as any,
             },
           ]}
           options={{
             theme: {
               mode: isDark ? "dark" : "light",
+              monochrome: {
+                color: "black",
+              },
             },
             chart: {
               height: 500,
@@ -49,37 +46,19 @@ function Chart() {
               toolbar: {
                 show: false,
               },
-              background: "rgba(0,0,0,0.5)",
-            },
-            stroke: {
-              curve: "smooth",
-              width: 5,
-            },
-            fill: {
-              type: "gradient",
-              gradient: { gradientToColors: ["#0be881"] },
-            },
-            colors: ["#0fbcf9"],
-            tooltip: {
-              y: {
-                formatter: (vlaue) => `$ ${vlaue.toFixed(3)}`,
-              },
             },
             xaxis: {
-              categories: data?.map((date) => date.time_close),
               type: "datetime",
             },
             yaxis: {
-              labels: {
-                formatter: function (y) {
-                  return "$" + y.toFixed(2);
-                },
+              tooltip: {
+                enabled: true,
               },
             },
           }}
         />
       )}
-    </div>
+    </Wrapper>
   );
 }
 

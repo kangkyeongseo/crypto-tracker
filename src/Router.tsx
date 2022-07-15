@@ -6,9 +6,9 @@ import Price from "./routes/Price";
 
 function Router() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={process.env.PUBLIC_URL}>
       <Routes>
-        <Route path="/:coinId/*" element={<Coin />}>
+        <Route path="/:coinId" element={<Coin />}>
           <Route path="chart" element={<Chart />} />
           <Route path="price" element={<Price />} />
         </Route>
